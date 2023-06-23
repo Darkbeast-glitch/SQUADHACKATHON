@@ -1,0 +1,49 @@
+<!-- transaction_form.html -->
+
+<form method="post">
+  {% csrf_token %}
+  
+  <!-- Currency -->
+  <div>
+    <label for="id_currency">Currency:</label>
+    <input type="text" name="currency" id="id_currency">
+  </div>
+  
+  <!-- Amount -->
+  <div>
+    <label for="id_amount">Amount:</label>
+    <input type="text" name="amount" id="id_amount">
+  </div>
+  
+  <!-- Mobile Network -->
+  <div>
+    <label for="id_mobile_network">Mobile Network:</label>
+    <input type="text" name="mobile_network" id="id_mobile_network">
+  </div>
+  
+  <!-- Mobile Number -->
+  <div>
+    <label for="id_mobile_number">Mobile Number:</label>
+    <input type="text" name="mobile_number" id="id_mobile_number">
+  </div>
+  
+  <!-- Bank Code -->
+  <div>
+    <label for="id_bank_code">Bank Code:</label>
+    <input type="text" name="bank_code" id="id_bank_code">
+  </div>
+  
+  <!-- Bank Account -->
+  <div>
+    <label for="id_bank_account">Bank Account:</label>
+    <input type="text" name="bank_account" id="id_bank_account">
+  </div>
+  
+  <!-- Transaction Type -->
+  <div>
+    <label for="id_transaction_type">Transaction Type:</label>
+    <input type="text" name="transaction_type" id="id_transaction_type">
+  </div>
+  
+  <button type="submit">Submit</button>
+</form>

@@ -1,12 +1,21 @@
-from django.shortcuts import render
-from django.http import HttpResponse
+from django.shortcuts import render,redirect,get_object_or_404
+from django.http import HttpResponse,HttpResponseBadRequest,JsonResponse,HttpRequest
 from africastalking import SMS
 import json
 from django.conf import settings
-from MainApp.models import SMSMessage
+from MainApp.models import SMSMessage,User
 from django.views.decorators.csrf import csrf_exempt
 import africastalking
-
+from django.views import View
+from paystackapi.transaction import Transaction as PaystackTransaction
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.forms import AuthenticationForm
+from MainApp.forms import *
+import requests
+import logging
+from django.contrib import messages
 
 # Create your views here.
 
@@ -190,3 +199,118 @@ def ussd_callback(request):
     # Send the response back to the API
 
     return HttpResponse(response)
+
+
+
+
+
+
+
+# initialize payment
+@csrf_exempt
+
+
+def pay_bill(request):
+    if request.method == 'POST':
+        form = BillPaymentForm(request.POST)
+        if form.is_valid():
+            bill_payment = form.save(commit=False)
+            bill_payment.user = request.user
+            bill_payment.status = 'PENDING'
+            bill_payment.save()
+
+            # Create Paystack transaction
+            
+            email = request.POST.get('email')
+            if not email:
+                # Handle the case when the user does not have an email
+                error_message = 'User email is required.'
+                return render(request, 'payment_failed.html', {'error_message': error_message})
+
+            amount_in_kobo = int(bill_payment.bill_amount * 100)
+            currency = 'GHS'
+
+            url = 'https://api.paystack.co/transaction/initialize'
+            headers = {
+                'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
+                'Content-Type': 'application/json',
+            }
+            data = {
+                'amount': amount_in_kobo,
+                'email': email,
+                'currency': currency,
+                # Add other necessary parameters
+            }
+            response = requests.post(url, headers=headers, json=data)
+            paystack_transaction = response.json()
+
+            if paystack_transaction['status']:
+                authorization_url = paystack_transaction['data']['authorization_url']
+                return redirect(authorization_url)
+            else:
+                error_message = paystack_transaction['message']
+                return render(request, 'payment_failed.html', {'error_message': error_message})
+    else:
+        form = BillPaymentForm()
+    
+    return render(request, 'pay_bill.html', {'form': form})
+
+
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def payment_callback(request):
+    ref = request.GET.get('reference')
+
+    if ref:
+        try:
+            bill_payment = BillPayment.objects.get(ref=ref)
+        except BillPayment.DoesNotExist:
+            return JsonResponse({'success': False, 'error_message': 'Bill payment not found.'})
+    else:
+        return JsonResponse({'success': False, 'error_message': 'Transaction reference not found.'})
+
+    # Verify the transaction status with Paystack using the retrieved reference
+    verification = PaystackTransaction.verify(ref)
+
+    if verification['status']:
+        bill_payment.status = 'SUCCESS'
+        bill_payment.save()
+        logger.info("Payment succeeded. Bill payment ID: %s", bill_payment.id)
+        return JsonResponse({'success': True})
+    else:
+        error_message = verification['message']
+        logger.error("Payment failed. Error message: %s", error_message)
+        return JsonResponse({'success': False, 'error_message': error_message})
+
+def payment_success(request):
+    return render(request, 'payment_success.html')
+
+def payment_failed(request):
+    return render(request, 'payment_failed.html')
+
+
+
+
+def signup(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        email = request.POST['email']
+        user = User(username=username, password=password, email=email)
+        user.save()
+        return redirect('login')
+    return render(request, 'signup.html')
+
+def login(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        try:
+            user = User.objects.get(username=username, password=password)
+            # Perform login logic here
+            return redirect('pay_bill')
+        except User.DoesNotExist:
+            error_message = 'Invalid username or password.'
+            return render(request, 'login.html', {'error_message': error_message})
+    return render(request, 'login.html')

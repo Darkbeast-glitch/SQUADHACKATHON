@@ -1,0 +1,18 @@
+<!-- initiate_transaction.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Initiate Transaction</title>
+</head>
+<body>
+    <h1>Initiate Transaction</h1>
+    <form method="POST" action="{% url 'initiate-transaction' %}">
+        {% csrf_token %}
+        <label for="amount">Amount:</label>
+        <input type="text" name="amount" id="amount">
+        <br><br>
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

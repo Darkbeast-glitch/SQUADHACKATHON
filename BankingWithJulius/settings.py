@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     
     # Own app
     'MainApp',
+    'paystack',
+    'paystackapi',
 
 ]
 
@@ -140,3 +142,15 @@ AFRICAS_TALKING_API_KEY = 'fc9f9cb4bada5d1947ec78bedfddd8358ab5f5831ef4752ee3ab6
 
 
 APPEND_SLASH = False
+
+
+PAYSTACK_PUBLIC_KEY = 'pk_test_9fbc7a26881a58e4ebd567f19e6b93148afd63b9'
+PAYSTACK_SECRET_KEY = 'sk_test_ec3a1fad13146f4c61538fa348e631dee3722557'
+
+
+CSRF_EXEMPT_URLS = [
+    '/paystack/callback/',
+]
+
+
+

@@ -1,0 +1,15 @@
+<!-- transaction_success.html -->
+<h1>Transaction Successful</h1>
+
+<p>Transaction details:</p>
+<ul>
+  <li><strong>Currency:</strong> {{ transaction.currency }}</li>
+  <li><strong>Amount:</strong> {{ transaction.amount }}</li>
+  <li><strong>Mobile Network:</strong> {{ transaction.get_mobile_network_display }}</li>
+  <li><strong>Mobile Number:</strong> {{ transaction.mobile_number }}</li>
+  <li><strong>Bank Code:</strong> {{ transaction.get_bank_code_display }}</li>
+  <li><strong>Bank Account:</strong> {{ transaction.bank_account }}</li>
+  <li><strong>Transaction Type:</strong> {{ transaction.get_transaction_type_display }}</li>
+</ul>
+
+<p>Thank you for your transaction.</p>
